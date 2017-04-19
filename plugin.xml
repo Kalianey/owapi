@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<plugin>
+    <name>OW API</name>
+    <key>owapi</key>
+    <description>Oxwall API</description>
+    <author>Kalianey</author>
+    <authorEmail>kalianey@gmail.com</authorEmail>
+    <authorUrl></authorUrl>
+    <developerKey>123</developerKey>
+    <build>1</build>
+    <copyright>Copyright 2015</copyright>
+    <license>The BSD License</license>
+    <licenseUrl>http://www.opensource.org/licenses/bsd-license.php</licenseUrl>
+</plugin>

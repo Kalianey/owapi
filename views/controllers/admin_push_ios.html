@@ -1,0 +1,62 @@
+{$menu}
+
+<style>
+    .cert_status_no
+    {
+        background: #CCC;
+        border: 2px dashed #555;
+        padding: 5px;
+    }
+    
+    .cert_status_ok
+    {
+        background: lightgreen;
+        border: 2px dashed green;
+        padding: 5px;
+    }
+    
+    .cert_status_error
+    {
+        background: lightcoral;
+        border: 2px dashed red;
+        padding: 5px;
+    }
+</style>
+
+<table name="owapi_settings_push_ios">
+{form name="push_ios"}
+
+    <tr>
+        <td>{label name="enabled"}</td>
+        <td>{input name="enabled"}</td>
+    </tr>
+    <tr>
+        <td>{label name="sandbox"}</td>
+        <td>{input name="sandbox"}</td>
+    </tr>
+    
+    <tr>
+        <td><a href="http://www.raywenderlich.com/32960/apple-push-notification-services-in-ios-6-tutorial-part-1"></a>CLick here to learn how to generate a certificate</a></td>
+    </tr>
+    <tr>
+        <td>Please convert the PKCS12 certificate bundle into PEM format.<a href="https://code.google.com/p/apns-php/wiki/CertificateCreation">Follow this link to learn how to convert it</a></td>
+    </tr>
+    
+    <tr>
+        <td>{label name="cert_path"}</td>
+        <td>{input name="cert_path"}</td>
+    </tr>
+    <tr>
+        <td colspan="2">{error name="cert_path"}</td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <div class="cert_status_{$cert_status}">{text key="owapi+cert_status_{$cert_status}"}</div>
+        </td>
+    </tr>
+    
+    <tr>
+        <td colspan="2">{submit name="submit"}</td>
+    </tr>
+{/form}
+</table>
