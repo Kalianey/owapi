@@ -1,16 +1,11 @@
 <?php
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 /**
  * Description of device_dao
  *
  * @author Kalianey
  */
+
 class OWAPI_BOL_DeviceDao extends OW_BaseDao
 {
     const DEVICE_KIND_IOS = 'ios';

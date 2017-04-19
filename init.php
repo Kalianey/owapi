@@ -1,7 +1,5 @@
 <?php
 
-//OW::getRouter()->addRoute(new OW_Route('owapi.device.test', '/owapi/device/test', 'OWAPI_CTRL_Device', 'test'));
-
 OW::getRouter()->addRoute(new OW_Route('owapi.site', '/owapi/site', 'OWAPI_CTRL_Site', 'index'));
 
 /*** User ***/
@@ -17,10 +15,18 @@ OW::getRouter()->addRoute(new OW_Route('owapi.user.favorite.list', '/owapi/user/
 
 OW::getRouter()->addRoute(new OW_Route('owapi.user.isFriend', '/owapi/user/isfriend/:friendId', 'OWAPI_CTRL_User', 'isFriend'));
 OW::getRouter()->addRoute(new OW_Route('owapi.user.friend', '/owapi/user/friend/:command/:friendId', 'OWAPI_CTRL_User', 'friend'));
+OW::getRouter()->addRoute(new OW_Route('owapi.user.friendList', '/owapi/messenger/friendList', 'OWAPI_CTRL_User', 'friendList'));
 OW::getRouter()->addRoute(new OW_Route('owapi.user.friend.requestList', '/owapi/user/friend/requestList', 'OWAPI_CTRL_User', 'friendRequestList'));
+
+OW::getRouter()->addRoute(new OW_Route('owapi.user.isBlocked', '/owapi/user/isblocked/:userId', 'OWAPI_CTRL_User', 'isBlocked'));
+OW::getRouter()->addRoute(new OW_Route('owapi.user.block', '/owapi/user/block/:command/:userId', 'OWAPI_CTRL_User', 'block'));
+
+OW::getRouter()->addRoute(new OW_Route('owapi.user.flag', '/owapi/user/flag/:reason/:userId', 'OWAPI_CTRL_User', 'flag'));
 
 OW::getRouter()->addRoute(new OW_Route('owapi.user.near', '/owapi/user/near/:distance', 'OWAPI_CTRL_User', 'near'));
 OW::getRouter()->addRoute(new OW_Route('owapi.user.update.location', '/owapi/user/updateLocation', 'OWAPI_CTRL_User', 'updateLocation'));
+
+OW::getRouter()->addRoute(new OW_Route('owapi.user.delete', '/owapi/user/delete', 'OWAPI_CTRL_User', 'delete'));
 
 /*** Messenger ***/
 OW::getRouter()->addRoute(new OW_Route('owapi.messenger.conversationList', '/owapi/messenger/conversationList', 'OWAPI_CTRL_Messenger', 'conversationList'));

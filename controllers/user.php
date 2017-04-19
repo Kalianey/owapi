@@ -1,11 +1,9 @@
 <?php
 
-/* 
- *  OWAPI User Controller
+/**
+ * Description of User Ctrl Class
  *
- * @author Kalianey <kalianey@gmail.com>
- * @package ow_plugins.owapi.controllers
- * @since 1.0
+ * @author Kalianey
  */
 
 class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
@@ -94,6 +92,18 @@ class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
             $password = $_POST['password'];
             $email = $_POST['email'];
             $realname = $_POST['realname'];
+            $defaultLang = 'fr';
+            
+            $lang = array (
+                'en' => array (
+                    'pass' => 'Incorrect password, please try again.',
+                    'updated' => 'Modification effectuée'
+                ),
+                'fr' => array (
+                    'errorPass' => 'Mot de passe incorrect, merci de réessayer.',
+                    'updated' => 'Modification effectuée'
+                )
+            );
             
             if ( $password != "" ) {
                 //works but can set <script>lala</script> as a password, problem?
@@ -104,11 +114,11 @@ class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
                     BOL_UserService::getInstance()->updatePassword( $userId, $password );
                     $msg []= "Password";
                 } else {
-                    $this->error('Incorrect password, please try again');
+                    $this->error($lang[$defaultLang]['errorPass']);
                 }
             }
             if ($email != ""){
-                //works but need to check if email is correct client side (here return error 500)
+                
                 BOL_UserService::getInstance()->updateEmail( $userId, $email );
                 $msg []= "Email";
             }
@@ -116,7 +126,7 @@ class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
                 //TODO: check if realname is valid
                 BOL_QuestionService::getInstance()->saveQuestionsData(array( 'realname' => $realname ), $userId);
                 $msg []= "Realname";
-                //striphtml 
+
             } 
             if (count($msg) == 0) {
                 $msg = "Nothing changed.";
@@ -124,8 +134,7 @@ class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
             }
             
             $msg = implode(', ',$msg);
-            $this->success($msg. " updated.");
-
+            $this->success($lang[$defaultLang]['updated']);
         }
     }
     
@@ -168,15 +177,6 @@ class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
                 $avatarService = BOL_AvatarService::getInstance();
 
                 $key = $avatarService->getAvatarChangeSessionKey();
-//                $uploaded = $avatarService->uploadUserTempAvatar($key, $file['tmp_name']);
-//
-//                if ( !$uploaded )
-//                {
-//                    $this->error($lang->text('base', 'upload_avatar_failed'));
-//                }
-//
-//                //return 3: AVATAR_ORIGINAL_PREFIX size
-//                $url = $avatarService->getTempAvatarUrl($key, 3);
 
                 $result = $avatarService->setUserAvatar($user->getId(), $file['tmp_name']);
                 
@@ -251,8 +251,49 @@ class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
 
             $this->success($result);
         }
-
         
+    }
+    
+    
+    function friendList()
+    {
+        $count = 1000;
+        $userId = OW::getUser()->getId();
+        
+        if (is_null(OW::getUser()))
+        {
+            $this->error('authentication failed');
+        } 
+        else {
+
+            $service = FRIENDS_BOL_Service::getInstance();
+            
+            $friendIdList = $service->findFriendIdList($userId, 0, $count );
+            
+            $userListData = MAILBOX_BOL_ConversationService::getInstance()->getUserInfoForUserIdList( $friendIdList);
+            
+            foreach($userListData as $user) {
+                $userid = $user['opponentId'];
+                $userInfo = $this->bridgeService->getUserInfo($userid);
+                $userListData["".$userid.""]['coverUrl'] = $userInfo['cover_url'];
+                $userListData["".$userid.""]['age'] = $userInfo['age'];
+                $userListData["".$userid.""]['sex'] = $userInfo['sex'];
+                $userListData["".$userid.""]['address'] = $userInfo['address'];
+            }
+        
+//            for($i = 0; $i < count($userListData['list']); $i++) {
+//                $userListData['list'][$i]['displayName'] = htmlspecialchars_decode($userListData['list'][$i]['displayName']);
+//                $userId = $userListData['list'][$i]['opponentId'];
+//                $userInfo = $this->bridgeService->getUserInfo($userId);
+//                $userListData['list'][$i]['coverUrl'] = $userInfo['cover_url'];
+//                $userListData['list'][$i]['age'] = $userInfo['age'];
+//                $userListData['list'][$i]['sex'] = $userInfo['sex'];
+//                $userListData['list'][$i]['address'] = $userInfo['address'];
+//            } 
+//        
+            $this->success($userListData); 
+        
+        }
     }
     
     
@@ -416,9 +457,7 @@ class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
 
         if ( $multiple )
         {
-           
             $lists['me'] = $service->findUsersWhoAddedUserAsFavorite($userId, 1, $count);
-
             $lists['mutual'] = $service->findMutualFavorites($userId, 1, $count);
         }
         
@@ -470,6 +509,7 @@ class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
         }
     }
     
+    
     private function getIds( $favorites, $name )
     {
         $resultArray = array();
@@ -483,6 +523,94 @@ class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
         }
 
         return $resultArray;
+    }
+    
+    
+    
+    //BLOCK
+    function isBlocked($params){
+        $userId = OW::getUser()->getId();
+        $blockedUserId = (int) $params['userId'];
+        
+        if ( !OW::getUser()->isAuthenticated() )
+        {
+            $this->error("Not authenticated user");
+        }
+         else {
+            
+            $isBlocked = BOL_UserService::getInstance()->isBlocked($blockedUserId, $userId);
+            $this->success($isBlocked);
+        }
+        
+    }
+    
+    
+    function block($params){
+        
+        $service = BOL_UserService::getInstance();
+        $command = $params['command'];
+        $result = false;
+        $msg = null;
+
+        if ( !OW::getUser()->isAuthenticated() )
+        {
+
+            $result = false;
+            $msg = 'User is not authenticated authorized';
+        }
+        else  {
+            
+            if ( $command == 'block' )
+            {
+                $service->block($params["userId"]);
+                $result = true;
+                $msg = 'User blocked';
+            }
+            
+            else 
+            {
+                $service->unblock($params["userId"]);
+                $result = true;
+                $msg = 'User unblocked';
+            }
+        
+        }
+        
+        //Return
+        if (!$result){
+         
+            $this->error($msg);
+            
+        } else {
+            
+            $this->success($msg);
+        }
+    }
+    
+    
+    //FLAG  
+    function flag($params)
+    {
+        if ( !OW::getUser()->isAuthenticated() )
+        {
+            $this->error("Not authenticated user");
+        }
+        else {
+            $entityType = 'user_join';
+            $entityId = $params["userId"];
+            $userId = OW::getUser()->getId();
+
+            if ( $entityId == $userId )
+            {
+                $this->error("You cannot flag your own content");
+            }
+
+            else {
+                $service = BOL_FlagService::getInstance();
+                $service->addFlag($entityType, $entityId, $params['reason'], $userId);
+                $this->success('Content successfully flagged');
+            }
+        }
     }
     
     
@@ -584,7 +712,6 @@ class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
         {
             $this->error("No json sent");
         }
-       
         
     }
     
@@ -616,5 +743,26 @@ class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
 //        $this->success($idList);
 //        
 //    }
+    
+    
+    function delete(){
+          
+        if ( !OW::getUser()->isAuthenticated() )
+        {
+            $msg = 'User is not authenticated authorized';
+            $this->error($msg);
+        } 
+        else {
+            $userId = OW::getUser()->getId();
+            $result = BOL_UserService::getInstance()->deleteUser($userId);
+            if($result) {
+                //Delete the connected fb/google remote auth account if exist
+                $remote_service = BOL_RemoteAuthService::getInstance();
+                $remote_service->deleteByUserId($userId);
+            }
+            $this->success($result);
+        }
+        
+    }
     
 }

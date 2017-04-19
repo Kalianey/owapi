@@ -1,9 +1,9 @@
 <?php
 
-/* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * Description of Messenger Ctrl Class
+ *
+ * @author Kalianey
  */
 
 class OWAPI_CTRL_Messenger extends OWAPI_CLASS_ApiController
@@ -233,25 +233,6 @@ class OWAPI_CTRL_Messenger extends OWAPI_CLASS_ApiController
         return $messages;
     }
     
-//    function conversationSend($params)
-//    {
-//        $userId = OW::getUser()->getId();
-//        $conversationId = $params['conversationId'];
-//        $text = $_POST['text'];
-//        if ( !$this->isUserConversation($conversationId) )
-//        {
-//            $this->error('Conversation not found');
-//        }
-//        else        
-//        {
-//            $conversation = $this->service->getConversation($conversationId);
-//            $message = $this->service->createMessage($conversation, $userId, $text);
-//            //$messageForApi = $this->service->getMessageDataForApi($message);
-//            $this->success($message);
-//        }
-//  
-//    }
-    
     
     
     function conversationSend($params)
@@ -260,13 +241,13 @@ class OWAPI_CTRL_Messenger extends OWAPI_CLASS_ApiController
         $conversationId = $params['conversationId'];
        
         $text = $_POST['text'];
+        
         if ( !$this->isUserConversation($conversationId) )
         {
             $this->error('Conversation not found');
         }
         else        
         {
-
             $conversation = $this->service->getConversation($conversationId);
             $newMessage = $this->service->createMessage($conversation, $userId, $text);
             

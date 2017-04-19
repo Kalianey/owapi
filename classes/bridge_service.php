@@ -1,11 +1,7 @@
 <?php
 
 /* 
- *  OWAPI Bridge Service
- *
- * @author Kalianey <kalianey@gmail.com>
- * @package ow_plugins.owapi.controllers
- * @since 1.0
+ * @author Kalianey
  */
 
 class OWAPI_CLASS_BridgeService extends OW_ActionController {
@@ -81,6 +77,7 @@ class OWAPI_CLASS_BridgeService extends OW_ActionController {
         } 
         
         $out = array (
+            'userId' => $userId,
             'name' => $questions[$userId]['realname'],
             'avatar_url' => $avatarUrl,
             'cover_url' => $coverUrl,
@@ -308,7 +305,7 @@ class OWAPI_CLASS_BridgeService extends OW_ActionController {
     
     /***************************************************** USER BRIDGE *******************************************/
     
-    public function findUserListByDistance($first, $count, $distance) {
+    public function findUserListByDistance($first, $limit, $distance) {
         
         $userId = OW::getUser()->getId();
 
@@ -335,9 +332,9 @@ class OWAPI_CLASS_BridgeService extends OW_ActionController {
                 HAVING distance < ".$distance."
                 ORDER BY 
                     distance ASC
-                LIMIT :first, :count ";
+                LIMIT 100 ";
         
-        return OW::getDbo()->queryForObjectList($query, "BOL_User", array('first'=>$first, 'count' => $count));
+        return OW::getDbo()->queryForObjectList($query, "BOL_User", array($first, $count));
     }
     
     public function getUserData($userListData) {

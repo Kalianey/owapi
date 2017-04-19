@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 
 /**
  * Description of OWAPI_CLASS_PushAndroid
@@ -54,7 +59,6 @@ class OWAPI_CLASS_PushAndroid {
     //$kind is the type of notification: chat, event...
     function send($token, $type, $message, $extra=null)
     {
-        
         $registrationIds = array( $token );
         // prep the bundle
         $msg = array
@@ -74,12 +78,12 @@ class OWAPI_CLASS_PushAndroid {
             'data' => $msg,
         );
 		// Update your Google Cloud Messaging API Key
-        print_r($fields);
+        //print_r($fields);
         $headers = array(
             'Authorization: key=' . self::API_ACCESS_KEY,
             'Content-Type: application/json'
         );
-        print_r($headers);
+        //print_r($headers);
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -90,10 +94,11 @@ class OWAPI_CLASS_PushAndroid {
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
         $result = curl_exec($ch);				
         if ($result === FALSE) {
-            die('Curl failed: ' . curl_error($ch));
+            return false;
+            //die('Curl failed: ' . curl_error($ch));
         }
         curl_close($ch);
-        echo $result;
+        //echo $result;
         return $result;
     }
 

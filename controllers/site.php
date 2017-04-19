@@ -12,11 +12,13 @@ require_once OW_DIR_PLUGIN.'glconnect'.DS.'lib'.DS.'httpcurl.php';
 
 class OWAPI_CTRL_Site extends OWAPI_CLASS_ApiController
 {
-    private $scope = 'email,public_profile';
+    private $fbScope = 'email,public_profile';
     private $httpcurl;
     public $client_id;
-    public $userinfopoint = 'https://www.googleapis.com/oauth2/v1/tokeninfo?id_token='; 
-
+    public $userinfo = 'https://www.googleapis.com/oauth2/v2/userinfo?access_token='; 
+    public $tokeninfo = 'https://www.googleapis.com/oauth2/v2/tokeninfo?access_token=';
+    
+    
     //was private but generated error
     public function __construct ()
     {
@@ -32,21 +34,31 @@ class OWAPI_CTRL_Site extends OWAPI_CLASS_ApiController
     {
         $token = $_POST['token'];
         //echo $token;
+        unlink('site.error.log');
         
         $language = OW::getLanguage();
         
         $userinfo = $this->glGetUserInfo($token);
-        //print_r($userinfo);
-        $result = $this->glLogin($userinfo);
+        $tokeninfo = $this->glGetTokenInfo($token);
+        if(is_null($userinfo) || is_null($tokeninfo))
+        {
+            $this->error('Token not found');
+        }
+        $allinfo = array_merge($userinfo,$tokeninfo);
+        
+        
+        $msg = print_r($allinfo,true);
+        file_put_contents('site.error.log', $msg, FILE_APPEND);
+        
+        $result = $this->glLogin($allinfo);
+        
+        $msg = print_r($result,true);
+        file_put_contents('site.error.log', $msg, FILE_APPEND);
         
          //We return the result
         if (!$result['isAuthenticated']){
-         
-            //$this->error($result['error']);
-            $this->success($userinfo);
-            
+            $this->error($result['error']);
         } else {
-
             $this->success($result);
         }
         
@@ -54,7 +66,15 @@ class OWAPI_CTRL_Site extends OWAPI_CLASS_ApiController
 
     public function glGetUserInfo($token)
     {
-        $this->httpcurl->setUrl ($this->userinfopoint.$token);
+        $this->httpcurl->setUrl($this->userinfo.$token);
+        $this->httpcurl->setPostMethod (false);
+        $this->httpcurl->execute();
+        return json_decode ($this->httpcurl->content,true);
+    }
+    
+    public function glGetTokenInfo($token)
+    {
+        $this->httpcurl->setUrl($this->tokeninfo.$token);
         $this->httpcurl->setPostMethod (false);
         $this->httpcurl->execute();
         return json_decode ($this->httpcurl->content,true);
@@ -70,11 +90,11 @@ class OWAPI_CTRL_Site extends OWAPI_CLASS_ApiController
         $msg = null;
         
         if (!$params['issued_to'] == $this->client_id) {
-            
+            //print_r($params);
             $error = "the aud claim DO NOT contains one of your app's client IDs.";
-        } 
-        
-        else {
+        }
+        else 
+        {
             
             //TODO: check if email is there
             $email = $params['email'];
@@ -104,26 +124,34 @@ class OWAPI_CTRL_Site extends OWAPI_CLASS_ApiController
                 }
 
                 $password = uniqid();
-
-                try {
+                file_put_contents('site.error.log', "\n\n ($username)", FILE_APPEND);
+                
+                try { 
                     $user = BOL_UserService::getInstance()->createUser($username, $password, $params['email'], null, $params['verified_email']);
                     $user->username = $username; //mods
                 } 
-                catch (Exception $e) {
+                catch (Exception $e) 
+                {
                     switch ($e->getCode()) {
                         case BOL_UserService::CREATE_USER_DUPLICATE_EMAIL:
                             $error = $language->text('glconnect', 'join_dublicate_email_msg');
-                            $isAuthenticated = false;
                             break;
                         case BOL_UserService::CREATE_USER_INVALID_USERNAME:
                             $error = $language->text('glconnect', 'join_incorrect_username');
-                            $isAuthenticated = false;
                             break;
                         default:
                             $error = $language->text('glconnect', 'join_incomplete');
-                            $isAuthenticated = false;
                             break;
                     }
+                    $out = array (
+                        'error' => $error,
+                        'userId' => 0,
+                        'msg' => '',
+                        'isAuthenticated' => false
+                    );
+
+                    return $out;
+                    
                 } 
                 //END TRY-CATCH
 
@@ -185,6 +213,7 @@ class OWAPI_CTRL_Site extends OWAPI_CLASS_ApiController
         {
             
             $authResult = OW::getUser()->authenticate($authAdapter);
+
             if ( $authResult->isValid() )
             {
                 //echo 'User is valid!';
@@ -270,14 +299,12 @@ class OWAPI_CTRL_Site extends OWAPI_CLASS_ApiController
                 $authResult = OW_Auth::getInstance()->authenticate($authAdapter);
                 if ( $authResult->isValid() )
                 {
-                    // what is this ?
                     $event = new OW_Event(OW_EventManager::ON_USER_REGISTER, array(
                         'method' => 'facebook',
                         'userId' => $user->id,
                         'params' => $_GET
                     ));
                     OW::getEventManager()->trigger($event);
-                    // ??? //
 
                     $isAuthenticated = true;
 
@@ -316,7 +343,7 @@ class OWAPI_CTRL_Site extends OWAPI_CLASS_ApiController
         if ( empty($user) )
         {
             $loginUrl = $facebook->getLoginUrl(array(
-                'scope' => $this->scope
+                'scope' => $this->$fbScope
             ));
 
             throw new RedirectException($loginUrl);
@@ -330,7 +357,7 @@ class OWAPI_CTRL_Site extends OWAPI_CLASS_ApiController
 
         $params = array(
             'appId' => "YOUR_APP_ID",
-            'secret' => "YOUR_TOKEN"
+            'secret' => "YOUR_APP_SECRET"
         );
 
         $faceBook = new Facebook($params);
@@ -339,7 +366,7 @@ class OWAPI_CTRL_Site extends OWAPI_CLASS_ApiController
     }
     
     
-    
+      
      private function removeAccents($str)
     {
       $a = array('À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ð', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'ß', 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'ÿ', 'Ā', 'ā', 'Ă', 'ă', 'Ą', 'ą', 'Ć', 'ć', 'Ĉ', 'ĉ', 'Ċ', 'ċ', 'Č', 'č', 'Ď', 'ď', 'Đ', 'đ', 'Ē', 'ē', 'Ĕ', 'ĕ', 'Ė', 'ė', 'Ę', 'ę', 'Ě', 'ě', 'Ĝ', 'ĝ', 'Ğ', 'ğ', 'Ġ', 'ġ', 'Ģ', 'ģ', 'Ĥ', 'ĥ', 'Ħ', 'ħ', 'Ĩ', 'ĩ', 'Ī', 'ī', 'Ĭ', 'ĭ', 'Į', 'į', 'İ', 'ı', 'Ĳ', 'ĳ', 'Ĵ', 'ĵ', 'Ķ', 'ķ', 'Ĺ', 'ĺ', 'Ļ', 'ļ', 'Ľ', 'ľ', 'Ŀ', 'ŀ', 'Ł', 'ł', 'Ń', 'ń', 'Ņ', 'ņ', 'Ň', 'ň', 'ŉ', 'Ō', 'ō', 'Ŏ', 'ŏ', 'Ő', 'ő', 'Œ', 'œ', 'Ŕ', 'ŕ', 'Ŗ', 'ŗ', 'Ř', 'ř', 'Ś', 'ś', 'Ŝ', 'ŝ', 'Ş', 'ş', 'Š', 'š', 'Ţ', 'ţ', 'Ť', 'ť', 'Ŧ', 'ŧ', 'Ũ', 'ũ', 'Ū', 'ū', 'Ŭ', 'ŭ', 'Ů', 'ů', 'Ű', 'ű', 'Ų', 'ų', 'Ŵ', 'ŵ', 'Ŷ', 'ŷ', 'Ÿ', 'Ź', 'ź', 'Ż', 'ż', 'Ž', 'ž', 'ſ', 'ƒ', 'Ơ', 'ơ', 'Ư', 'ư', 'Ǎ', 'ǎ', 'Ǐ', 'ǐ', 'Ǒ', 'ǒ', 'Ǔ', 'ǔ', 'Ǖ', 'ǖ', 'Ǘ', 'ǘ', 'Ǚ', 'ǚ', 'Ǜ', 'ǜ', 'Ǻ', 'ǻ', 'Ǽ', 'ǽ', 'Ǿ', 'ǿ');

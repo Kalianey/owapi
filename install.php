@@ -1,11 +1,9 @@
 <?php
+
 /**
- * Copyright (c ) 2014 by iHands, Inc. All Rights Reserved.
- * This is property of iHands, any modifications to this file must keep this entire header intact.
- * iHands website : http://www.ihands.com.vn
- * License        : http://www.ihands.com.vn/license
- * Project        : iMod
- * FileName       : install.php
+ * Install
+ *
+ * @author Kalianey
  */
 
 OW::getPluginManager()->addPluginSettingsRouteName('owapi', 'owapi.admin');

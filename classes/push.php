@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Description of Push Class
+ *
+ * @author Kalianey
+ */
+
 class OWAPI_CLASS_Push {
     const PUSH_TYPE_MESSAGE = 'message';
     const PUSH_TYPE_FRIEND = 'friend-request';
@@ -33,11 +39,16 @@ class OWAPI_CLASS_Push {
         $pushAndroid = OWAPI_CLASS_PushAndroid::getInstance();
         $devices = OWAPI_BOL_DeviceDao::getInstance()->findByUserId($userId);
         //var_dump($devices);
+//        OW::getLogger()->addEntry('[PUSH]::sending');
+//        OW::getLogger()->writeLog();
+//        file_put_contents('push.log', $message."\n");
+//        file_put_contents('push.log', "Device count: ".count($devices)."\n" , FILE_APPEND);
+//        $i = 0;
         foreach($devices as $device)
         {
             if ($device->push_enable )
             {
-                OW::getLogger()->addEntry('push:'.$type.':sending');
+                //file_put_contents('push.log', "Device ".$device->kind."(".$device->token.")"."\n" , FILE_APPEND);
                 if ($device->kind == OWAPI_BOL_DeviceDao::DEVICE_KIND_IOS)
                 {
                     $pushIos->send($device->token, $type, $message, $badge, $extra);
@@ -45,6 +56,7 @@ class OWAPI_CLASS_Push {
                 else if ($device->kind == OWAPI_BOL_DeviceDao::DEVICE_KIND_ANDROID)
                 {
                     $pushAndroid->send($device->token, $type, $message, $extra);
+                    
                 }
             }
         }
