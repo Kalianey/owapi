@@ -280,17 +280,7 @@ class OWAPI_CTRL_User extends OWAPI_CLASS_ApiController
                 $userListData["".$userid.""]['sex'] = $userInfo['sex'];
                 $userListData["".$userid.""]['address'] = $userInfo['address'];
             }
-        
-//            for($i = 0; $i < count($userListData['list']); $i++) {
-//                $userListData['list'][$i]['displayName'] = htmlspecialchars_decode($userListData['list'][$i]['displayName']);
-//                $userId = $userListData['list'][$i]['opponentId'];
-//                $userInfo = $this->bridgeService->getUserInfo($userId);
-//                $userListData['list'][$i]['coverUrl'] = $userInfo['cover_url'];
-//                $userListData['list'][$i]['age'] = $userInfo['age'];
-//                $userListData['list'][$i]['sex'] = $userInfo['sex'];
-//                $userListData['list'][$i]['address'] = $userInfo['address'];
-//            } 
-//        
+              
             $this->success($userListData); 
         
         }

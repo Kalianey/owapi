@@ -124,9 +124,7 @@ class OWAPI_CTRL_Messenger extends OWAPI_CLASS_ApiController
             );
         
             //We set the conversation as read since the user requested to display it
-            //$this->service->markRead(array($conversationId), $userId);
             $this->service->setConversationViewedInConsole(array($conversationId), $userId);
-            //$this->service->resetUserLastData($userId);
             
             $this->success($response);
         }
@@ -165,7 +163,7 @@ class OWAPI_CTRL_Messenger extends OWAPI_CLASS_ApiController
         {
             $messages = $this->removeOembed($this->messageDao->findHistory($conversationId, $lastMessage, 30));
             
-            /* test with attachment */
+            /* Attachment */
             
             $attachments = $this->attachmentDao->findAttachmentstByConversationList(array($conversationId));
             
@@ -212,7 +210,7 @@ class OWAPI_CTRL_Messenger extends OWAPI_CLASS_ApiController
                     $messages[$key]['attachment']= "";
                 }
             }
-            /* End test with attachment */
+            /* End Attachment */
             
             $this->success($messages);
         }
@@ -308,7 +306,7 @@ class OWAPI_CTRL_Messenger extends OWAPI_CLASS_ApiController
     function conversationMarkRead( $params ) {
         
         $userId = OW::getUser()->getId();
-        //check if 0 dont do it
+        //TODO: check if 0 
         $conversationId = $params['conversationId'];
         
         $messageList = $this->messageDao->findUnreadMessagesForConversation($conversationId,$userId);

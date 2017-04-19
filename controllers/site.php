@@ -19,7 +19,6 @@ class OWAPI_CTRL_Site extends OWAPI_CLASS_ApiController
     public $tokeninfo = 'https://www.googleapis.com/oauth2/v2/tokeninfo?access_token=';
     
     
-    //was private but generated error
     public function __construct ()
     {
         $this->client_id = 'YOUR_CLIENT_ID';
